@@ -30,5 +30,6 @@ pi
   перецепляется сам; флап port-forward - colima restart.
 - Креды агента (kubectl/psql): шаблоны в ~/credentials/agents-credentials/*.example -
   заполнить и сохранить рядом как kubeconfig / pgpass / pg_service.conf (chmod 600), затем
-  перезапустить pi. kubectl port-forward - через порты 8600-8799; psql - по ~/.pgpass и
-  pg_service.conf (psql service=...).
+  перезапустить pi. kubectl port-forward - только с --address 0.0.0.0: без него слушатель
+  только на loopback внутри netns dind и до опубликованных 8600-8799 (lima форвардит на
+  mac-localhost) не достаёт; psql - по ~/.pgpass и pg_service.conf (psql service=...).
