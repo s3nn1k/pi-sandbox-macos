@@ -29,7 +29,7 @@ pi
 - Живые сессии: docker ps --format '{{.Names}}' | grep pi-sess; при обрыве связи pi-run
   перецепляется сам; флап port-forward - colima restart.
 - Креды агента (kubectl/psql): kubeconfig / pgpass / pg_service.conf в
-  ~/credentials/agents-credentials/ (рядом с git-credentials), затем
-  перезапустить pi. kubectl port-forward - только с --address 0.0.0.0: без него слушатель
-  только на loopback внутри netns dind и до опубликованных 8600-8799 (lima форвардит на
-  mac-localhost) не достаёт; psql - по ~/.pgpass и pg_service.conf (psql service=...).
+  ~/credentials/agents-credentials/ (рядом с git-credentials), затем перезапустить pi.
+  kubectl port-forward - только с --address 0.0.0.0: без него слушатель только на loopback
+  внутри netns dind и до опубликованных 8600-8799 (lima форвардит на mac-localhost) не
+  достаёт; psql - по ~/.pgpass и pg_service.conf (psql service=...).
