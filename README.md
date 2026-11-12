@@ -28,3 +28,7 @@ pi
 - Проверка окружения: sandbox-sync; смена списка корней - sandbox-sync + colima restart.
 - Живые сессии: docker ps --format '{{.Names}}' | grep pi-sess; при обрыве связи pi-run
   перецепляется сам; флап port-forward - colima restart.
+- Креды агента (kubectl/psql): шаблоны в ~/credentials/agents-credentials/*.example -
+  заполнить и сохранить рядом как kubeconfig / pgpass / pg_service.conf (chmod 600), затем
+  перезапустить pi. kubectl port-forward - через порты 8600-8799; psql - по ~/.pgpass и
+  pg_service.conf (psql service=...).
