@@ -34,3 +34,5 @@ pi
   внутри netns dind и до опубликованных 8600-8799 (lima форвардит на mac-localhost) не
   достаёт; psql - по ~/.pgpass и pg_service.conf (psql 'service=primary dbname=mydb'; флаг
   -d перебивает позиционный service=).
+- Скилл окружения агента (kubectl/psql/docker) - skills/sandbox-environment, pi-run
+  доставляет его агенту.
