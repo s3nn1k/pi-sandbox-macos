@@ -125,38 +125,21 @@ done
 echo $$ > "$sync_lock/pid"
 sync_lock_release() { [ "$(cat "$sync_lock/pid" 2>/dev/null)" = "$$" ] && rm -rf "$sync_lock"; }
 
-pi_bin="$(readlink -f "$(command -v pi 2>/dev/null)" 2>/dev/null)"
-PI_SRC=""
-for _ in 1 2 3 4; do
-  [ -n "$pi_bin" ] || break
-  pi_dir="$(dirname "$pi_bin")"
-  while [ "$pi_dir" != "/" ]; do
-    if jq -e '.name? == "@earendil-works/pi-coding-agent"' "$pi_dir/package.json" >/dev/null 2>&1; then
-      PI_SRC="$pi_dir"
-      break 2
-    fi
-    pi_dir="$(dirname "$pi_dir")"
-  done
-  pi_next="$(grep -oE '"/[^" ]+"' "$pi_bin" 2>/dev/null | head -1 | tr -d '"')"
-  [ -n "$pi_next" ] && [ "$pi_next" != "$pi_bin" ] || break
-  pi_bin="$(readlink -f "$pi_next" 2>/dev/null)"
-done
-if [ -z "$PI_SRC" ]; then
-  echo "pi: не нашёл пакет @earendil-works/pi-coding-agent за '${pi_command:-pi}' — рантайм для контейнера взять неоткуда" >&2
-  sync_lock_release
-  exit 1
-fi
+pi_ver="$(cat "$HOME/.pi/agent/install/current-version" 2>/dev/null)"
+PI_SRC="$HOME/.pi/agent/install/releases/$pi_ver/node_modules/@earendil-works/pi-coding-agent"
+[ -f "$PI_SRC/dist/bundle/cli.js" ] \
+  || { echo "pi: pi-рантайм не найден ($PI_SRC/dist/bundle/cli.js; current-version: ${pi_ver:-пусто}) — проверь ~/.pi/agent/install" >&2
+       sync_lock_release
+       exit 1; }
 
-mkdir -p "$CACHE/brain" "$CACHE/nvim" "$CACHE/dotfiles" "$CACHE/pi-runtime"
+mkdir -p "$CACHE/brain" "$CACHE/nvim" "$CACHE/dotfiles"
 rsync -a --copy-unsafe-links --delete --exclude /sessions --exclude /missions "$HOME/.pi/agent/" "$CACHE/brain/" &
 rs_brain=$!
-rsync -a --delete "$PI_SRC/" "$CACHE/pi-runtime/" &
-rs_pi=$!
 rsync -a --delete "$HOME/.config/nvim/" "$CACHE/nvim/" &
 rs_nvim=$!
 rsync -a --delete --exclude .git "$HOME/dotfiles-mac/" "$CACHE/dotfiles/" &
 rs_dot=$!
-trap 'kill $rs_brain $rs_pi $rs_nvim $rs_dot 2>/dev/null; wait; sync_lock_release' INT TERM HUP
+trap 'kill $rs_brain $rs_nvim $rs_dot 2>/dev/null; wait; sync_lock_release' INT TERM HUP
 { sed -e 's#~/\.config/git/credentials\.gitconfig#~/credentials/git/gitconfig#' \
        "$HOME/dotfiles-mac/gitconfig"; printf '\n[safe]\n\tdirectory = *\n'; } > "$CACHE/.gitconfig.tmp" \
   || { echo "pi: нет ~/dotfiles-mac/gitconfig" >&2; rm -f "$CACHE/.gitconfig.tmp"; kill $rs_brain $rs_nvim $rs_dot 2>/dev/null; wait; sync_lock_release; exit 1; }
@@ -202,7 +185,6 @@ for cred_name in kubeconfig pgpass pg_service.conf; do
 done
 sync_fail=0
 wait $rs_brain || sync_fail=1
-wait $rs_pi || sync_fail=1
 wait $rs_nvim || sync_fail=1
 wait $rs_dot || sync_fail=1
 mkdir -p "$CACHE/dotfiles/bin" \
